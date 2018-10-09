@@ -46,7 +46,7 @@ func ReturnSoajsData(w http.ResponseWriter, r *http.Request) {
 //main function
 func main() {
     router := mux.NewRouter()
-    soajsMiddleware := soajsGo.InitMiddleware(map[string]string{})
+    soajsMiddleware := soajsGo.InitMiddleware(map[string]string{"serviceName":"golang"})
     router.Use(soajsMiddleware)
 
     router.HandleFunc("/tidbit/hello", SayHello).Methods("GET")
