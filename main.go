@@ -1,56 +1,77 @@
 package main
 
 import (
-    "log"
-    "fmt"
-    "net/http"
-    "encoding/json"
-    "github.com/gorilla/mux"
-    "github.com/soajs/soajs.golang"
+	"../soajs.golang"
+	"encoding/json"
+	"fmt"
+	"github.com/gorilla/mux"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
 )
 
 type Response struct {
-    Message             string          `json:"message"`
+	Message string `json:"message"`
 }
 
-func SayHello(w http.ResponseWriter, r *http.Request) {
-    vars := r.URL.Query()
-
-    resp := Response{}
-    resp.Message = fmt.Sprintf("Hello DEMO, I am a GOLANG service, you are %v and your last name is: %v", vars["username"], vars["lastname"])
-
-    respJson, err := json.Marshal(resp)
-    if err != nil {
-        panic(err)
-    }
-
+func Heartbeat(w http.ResponseWriter, r *http.Request) {
+	resp := Response{}
+	resp.Message = fmt.Sprintf("heartbeat")
+	respJson, err := json.Marshal(resp)
+	if err != nil {
+		panic(err)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(respJson)
 }
 
-func ReturnSoajsData(w http.ResponseWriter, r *http.Request) {
-    soajs := r.Context().Value("soajs").(soajsGo.SOAJSObject)
-    soajs.Controller = soajs.Awareness.GetHost()
-
-    response, err := json.Marshal(soajs)
-    if err != nil {
-        panic(err)
-    }
-
-    w.Header().Set("Content-Type", "application/json")
+func SayHello(w http.ResponseWriter, r *http.Request) {
+	soajs := r.Context().Value("soajs").(soajsGo.SOAJSObject)
+	respJson, err := json.Marshal(soajs)
+	if err != nil {
+		panic(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-    w.Write(response)
+	w.Write(respJson)
+}
+
+func SayHelloPost(w http.ResponseWriter, r *http.Request) {
+	soajs := r.Context().Value("soajs").(soajsGo.SOAJSObject)
+	controller := soajs.Awareness.GetHost()
+	log.Println(controller)
+	response, err := json.Marshal(soajs)
+	if err != nil {
+		panic(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
 }
 
 //main function
 func main() {
-    router := mux.NewRouter()
-    soajsMiddleware := soajsGo.InitMiddleware(map[string]string{"serviceName":"golang"})
-    router.Use(soajsMiddleware)
+	router := mux.NewRouter()
 
-    router.HandleFunc("/tidbit/hello", SayHello).Methods("GET")
-    router.HandleFunc("/tidbit/hello", ReturnSoajsData).Methods("POST")
+	jsonFile, err := os.Open("soajs.json")
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println("Successfully Opened soajs.json")
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	var result map[string]interface{}
+	json.Unmarshal([]byte(byteValue), &result)
+	soajsMiddleware := soajsGo.InitMiddleware(result)
+	router.Use(soajsMiddleware)
 
-    log.Fatal(http.ListenAndServe(":4383", router))
+	router.HandleFunc("/tidbit/hello", SayHello).Methods("GET")
+	router.HandleFunc("/tidbit/hello", SayHelloPost).Methods("POST")
+
+	router.HandleFunc("/heartbeat", Heartbeat)
+
+	log.Println("starting")
+	log.Fatal(http.ListenAndServe(":4382", router))
 }
