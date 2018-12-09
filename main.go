@@ -1,10 +1,10 @@
 package main
 
 import (
-	"../soajs.golang"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/soajs/soajs.golang"
 	"io/ioutil"
 	"log"
 	"net/http"
