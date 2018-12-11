@@ -97,10 +97,10 @@ var utils = {
 		params.json = true;
 
         try {
-            config = require("./soajs.json");
+            config = require("./soa.json");
         }
         catch(e) {
-            console.log("Could not find a soajs.json file, searching for custom config file [config.js] ...");
+            console.log("Could not find a soa.json file, searching for custom config file [config.js] ...");
 
             try {
                 config = require('./config.js');
