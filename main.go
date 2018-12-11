@@ -55,7 +55,7 @@ func SayHelloPost(w http.ResponseWriter, r *http.Request) {
 func main() {
 	router := mux.NewRouter()
 
-	jsonFile, err := os.Open("soajs.json")
+	jsonFile, err := os.Open("soa.json")
 	if err != nil {
 		log.Println(err)
 	}
