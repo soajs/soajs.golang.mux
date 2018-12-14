@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type Response struct {
@@ -73,5 +74,5 @@ func main() {
 	router.HandleFunc("/heartbeat", Heartbeat)
 
 	log.Println("starting")
-	log.Fatal(http.ListenAndServe(":4382", router))
+	log.Fatal(http.ListenAndServe(":"+strconv.FormatFloat(result["servicePort"].(float64), 'f', -1, 64), router))
 }
