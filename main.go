@@ -58,7 +58,7 @@ func main() {
 
 	jsonFile, err := os.Open("soa.json")
 	if err != nil {
-		log.Println(err)
+		panic(err)
 	}
 	log.Println("Successfully Opened soajs.json")
 	defer jsonFile.Close()
