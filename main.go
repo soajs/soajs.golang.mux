@@ -56,11 +56,17 @@ func SayHelloPost(w http.ResponseWriter, r *http.Request) {
 func main() {
 	router := mux.NewRouter()
 
-	jsonFile, err := os.Open("soa.json")
+	soaJsonFile := "soa.json"
+	goSrc := os.Getenv("SOAJS_GO_SRC")
+	if goSrc != "" {
+		soaJsonFile = goSrc + soaJsonFile
+	}
+
+	jsonFile, err := os.Open(soaJsonFile)
 	if err != nil {
 		panic(err)
 	}
-	log.Println("Successfully Opened soajs.json")
+	log.Println("Successfully Opened soa.json")
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	var result map[string]interface{}
