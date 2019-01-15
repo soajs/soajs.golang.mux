@@ -6,7 +6,7 @@
     },
     "serviceName": "golang",
     "serviceGroup": "Custom Services",
-    "servicePort": 4382,
+    "servicePort": 4380,
     "swagger": true,
     "requestTimeout": 30,
     "requestTimeoutRenewal": 5,
