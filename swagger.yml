@@ -11,7 +11,7 @@ paths:
     get:
       tags:
         - hello
-      summary: Hello World
+      description: Hello World
       parameters:
         - name: username
           in: query
