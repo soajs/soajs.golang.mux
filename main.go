@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -9,7 +10,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 type Response struct {
@@ -29,7 +29,7 @@ func Heartbeat(w http.ResponseWriter, r *http.Request) {
 }
 
 func SayHello(w http.ResponseWriter, r *http.Request) {
-	soajs := r.Context().Value("soajs").(soajsGo.SOAJSObject)
+	soajs := r.Context().Value(soajsgo.SoajsKey).(soajsgo.ContextData)
 	respJson, err := json.Marshal(soajs)
 	if err != nil {
 		panic(err)
@@ -40,8 +40,8 @@ func SayHello(w http.ResponseWriter, r *http.Request) {
 }
 
 func SayHelloPost(w http.ResponseWriter, r *http.Request) {
-	soajs := r.Context().Value("soajs").(soajsGo.SOAJSObject)
-	controller := soajs.Awareness.GetHost()
+	soajs := r.Context().Value(soajsgo.SoajsKey).(soajsgo.ContextData)
+	controller := soajs.Awareness.Path()
 	log.Println(controller)
 	response, err := json.Marshal(soajs)
 	if err != nil {
@@ -56,29 +56,28 @@ func SayHelloPost(w http.ResponseWriter, r *http.Request) {
 func main() {
 	router := mux.NewRouter()
 
-	soaJsonFile := "soa.json"
-	goSrc := os.Getenv("SOAJS_GO_SRC")
-	if goSrc != "" {
-		soaJsonFile = goSrc + soaJsonFile
-	}
-
-	jsonFile, err := os.Open(soaJsonFile)
+	jsonFile, err := os.Open("soa.json")
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	log.Println("Successfully Opened soa.json")
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var result map[string]interface{}
+	var result soajsgo.Config
 	json.Unmarshal([]byte(byteValue), &result)
-	soajsMiddleware := soajsGo.InitMiddleware(result)
-	router.Use(soajsMiddleware)
+
+	soajs, err := soajsgo.NewFromConfig(context.Background(), result)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	router.Use(soajs.Middleware)
 
 	router.HandleFunc("/tidbit/hello", SayHello).Methods("GET")
 	router.HandleFunc("/tidbit/hello", SayHelloPost).Methods("POST")
 
 	router.HandleFunc("/heartbeat", Heartbeat)
 
-	log.Println("starting")
-	log.Fatal(http.ListenAndServe(":"+strconv.FormatFloat(result["servicePort"].(float64), 'f', -1, 64), router))
+	port := fmt.Sprintf(":%d", result.ServicePort)
+	log.Fatal(http.ListenAndServe(port, router))
 }
